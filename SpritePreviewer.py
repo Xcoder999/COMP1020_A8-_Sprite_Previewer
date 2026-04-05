@@ -48,6 +48,15 @@ class SpritePreview(QMainWindow):
         self.slider.setInvertedAppearance(True)
         self.slider.valueChanged.connect(self.on_fps_changed)
 
+        self.start_button = QPushButton("Start")
+        self.stop_button = QPushButton("Stop")
+
+        self.start_button.clicked.connect(self.start)
+        self.stop_button.clicked.connect(self.stop)
+
+        self.animation_start = False
+        self.animation_stop = True
+
         self.timer = QTimer()
         self.timer.timeout.connect(self.next_frame)
         self.timer.start(1000 // self.fps)
@@ -68,22 +77,39 @@ class SpritePreview(QMainWindow):
         slider_layout.addWidget(self.label_slider)
         slider_layout.addWidget(self.slider)
 
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.start_button)
+        button_layout.addWidget(self.stop_button)
+
         main_layout = QHBoxLayout()
         main_layout.addWidget(self.label_chr)
         main_layout.addLayout(slider_layout)
+        main_layout.addLayout(button_layout)
 
         frame.setLayout(main_layout)
         self.setCentralWidget(frame)
 
+    def start(self):
+        print("Starting")
+        self.animation_start = True
+        self.animation_stop = False
+    def stop(self):
+        print("Stopping")
+        self.animation_stop = True
+        self.animation_start = False
+
     def next_frame(self):
-        self.current_frame = (self.current_frame + 1) % self.num_frames
-        self.label_chr.setPixmap(self.frames[self.current_frame])
+        if self.animation_start == True and self.animation_stop == False:
+            self.current_frame = (self.current_frame + 1) % self.num_frames
+            self.label_chr.setPixmap(self.frames[self.current_frame])
+        else:
+            self.current_frame = (self.current_frame + 0) % self.num_frames
+            self.label_chr.setPixmap(self.frames[self.current_frame])
 
     def on_fps_changed(self, value):
         self.fps = value
         self.label_slider.setText(f"Frame per second: {value}")
         self.timer.start(1000 // value)
-
 
     # You will need methods in the class to act as slots to connect to signals
 
