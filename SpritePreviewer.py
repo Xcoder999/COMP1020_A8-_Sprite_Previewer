@@ -38,24 +38,25 @@ class SpritePreview(QMainWindow):
 
         # Add any other instance variables needed to track information as the program
         # runs here
-        self.label_slider = QLabel(f"Frame per second: {self.fps}")
-        self.label_slider.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_FPS = QLabel("Frame per second")
+        self.label_FPS.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.fps_label = QLabel("0")
+        self.fps_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.slider = QSlider(Qt.Orientation.Vertical)
         self.slider.setMinimum(1)
-        self.slider.setMaximum(30)
+        self.slider.setMaximum(100)
         self.slider.setValue(self.fps)
         self.slider.setInvertedAppearance(True)
+        self.slider.setTickPosition(QSlider.TickPosition.TicksRight)
+        self.slider.setTickInterval(10)
         self.slider.valueChanged.connect(self.on_fps_changed)
 
-        self.start_button = QPushButton("Start")
-        self.stop_button = QPushButton("Stop")
+        self.start_and_stop_button = QPushButton("Start")
+        self.start_and_stop_button.clicked.connect(self.start_and_stop)
 
-        self.start_button.clicked.connect(self.start)
-        self.stop_button.clicked.connect(self.stop)
-
-        self.animation_start = False
-        self.animation_stop = True
+        self.animation_play = False
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.next_frame)
@@ -73,33 +74,36 @@ class SpritePreview(QMainWindow):
         # the other components of the program.
         # Create needed connections between the UI components and slot methods
         # you define in this class.
-        slider_layout = QVBoxLayout()
-        slider_layout.addWidget(self.label_slider)
-        slider_layout.addWidget(self.slider)
+        fps_layout = QHBoxLayout()
+        fps_layout.addWidget(self.label_FPS)
+        fps_layout.addWidget(self.fps_label)
 
         button_layout = QHBoxLayout()
-        button_layout.addWidget(self.start_button)
-        button_layout.addWidget(self.stop_button)
+        button_layout.addWidget(self.start_and_stop_button)
 
         main_layout = QHBoxLayout()
         main_layout.addWidget(self.label_chr)
-        main_layout.addLayout(slider_layout)
+        main_layout.addWidget(self.slider)
+        main_layout.addLayout(fps_layout)
         main_layout.addLayout(button_layout)
 
         frame.setLayout(main_layout)
         self.setCentralWidget(frame)
 
-    def start(self):
-        print("Starting")
-        self.animation_start = True
-        self.animation_stop = False
-    def stop(self):
-        print("Stopping")
-        self.animation_stop = True
-        self.animation_start = False
+    def start_and_stop(self):
+        if self.animation_play:
+            self.timer.stop()
+            self.animation_play = False
+            self.start_and_stop_button.setText("Start")
+        else:
+            self.fps = self.slider.value()
+            self.timer.start(1000//self.fps)
+            self.animation_play = True
+            self.start_and_stop_button.setText("Stop")
+
 
     def next_frame(self):
-        if self.animation_start == True and self.animation_stop == False:
+        if self.animation_play:
             self.current_frame = (self.current_frame + 1) % self.num_frames
             self.label_chr.setPixmap(self.frames[self.current_frame])
         else:
@@ -108,7 +112,7 @@ class SpritePreview(QMainWindow):
 
     def on_fps_changed(self, value):
         self.fps = value
-        self.label_slider.setText(f"Frame per second: {value}")
+        self.fps_label.setText(str(value))
         self.timer.start(1000 // value)
 
     # You will need methods in the class to act as slots to connect to signals
